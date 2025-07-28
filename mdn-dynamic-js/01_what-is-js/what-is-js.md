@@ -8,6 +8,8 @@ JavaScript is a **scripting/programming language** that enables dynamic, interac
 - **CSS**: Styling and layout  
 - **JavaScript**: Dynamic behavior and interactivity
 
+Note that JS and Java are basically completely different languages!
+
 ## Core Capabilities
 
 ### Basic Programming Features
