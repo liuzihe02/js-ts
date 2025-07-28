@@ -48,6 +48,7 @@
 
       const guesses = document.querySelector(".guesses");
       const lastResult = document.querySelector(".lastResult");
+      // query selector needs a .lowOrHi need a period before here
       const lowOrHi = document.querySelector("lowOrHi");
       const guessSubmit = document.querySelector(".guessSubmit");
       const guessField = document.querySelector(".guessField");
@@ -56,6 +57,9 @@
       let resetButton;
 
       function checkGuess() {
+        //use console for debugging purposes
+        console.log("lowOrHi is", lowOrHi);
+
         const userGuess = Number(guessField.value);
         if (guessCount === 1) {
           guesses.textContent = "Previous guesses: ";
@@ -84,7 +88,8 @@
         guessField.value = "";
         guessField.focus();
       }
-      guessSubmit.addeventListener("click", checkGuess);
+      //theres actually a typo here, JS is case sensitive
+      guessSubmit.addEventListener("click", checkGuess);
 
       function setGameOver() {
         guessField.disabled = true;
@@ -92,7 +97,7 @@
         resetButton = document.createElement("button");
         resetButton.textContent = "Start new game";
         document.body.appendChild(resetButton);
-        resetButton.addeventListener("click", resetGame);
+        resetButton.addEventListener("click", resetGame);
       }
 
       function resetGame() {
