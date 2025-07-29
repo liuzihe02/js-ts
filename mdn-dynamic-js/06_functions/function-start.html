@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Function start</title>
+    <style>
+      .msgBox {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        background: #eee;
+      }
+
+      .msgBox p {
+        line-height: 1.5;
+        padding: 10px 20px;
+        color: #333;
+      }
+
+      .msgBox button {
+        background: none;
+        border: none;
+        position: absolute;
+        top: 0;
+        right: 0;
+        font-size: 1.1rem;
+        color: #aaa;
+      }
+    </style>
+  </head>
+  <body>
+    <button>Display message box</button>
+    <script>
+      //declare the displayMessage
+      function displayMessage(msgText, msgType) {
+        // Get body element using the DOM API to get the body property of the global `document` object
+        // declare this as a constant
+        const body = document.body;
+
+        // Create container div
+        const panel = document.createElement("div");
+        // custom css class that we defined in the style tags
+        panel.setAttribute("class", "msgBox");
+        //panel <div> is appended to body
+        body.appendChild(panel);
+
+        // Create paragraph object
+        const msg = document.createElement("p");
+        msg.textContent = msgText;
+        //children of panel
+        panel.appendChild(msg);
+
+        // Create a close button (button object)
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "x";
+        panel.appendChild(closeBtn);
+
+        // Add close functionality
+        closeBtn.addEventListener("click", () =>
+          //delete the panel div from the page
+          panel.parentNode.removeChild(panel)
+        );
+      }
+
+      //now we need to call this function on events
+      const btn = document.querySelector("button");
+      // we must put this inside an anonymous function wrapper
+      // so that the function will not be clicked immediately
+      btn.addEventListener("click", () =>
+        displayMessage("Woo, this is a different message!")
+      );
+    </script>
+  </body>
+</html>
