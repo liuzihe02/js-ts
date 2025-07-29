@@ -1,0 +1,26 @@
+<div id="container">
+  <button>Click me!</button>
+</div>
+
+<pre id="output"></pre>
+
+<script>
+  // select id as output
+  const output = document.querySelector("#output");
+  function handleClick(e) {
+    //e.target is the element that was actually clicked (button here)
+    //e.currentTarget is the elem with the event listener (the container)
+    output.textContent += `You clicked on a ${e.currentTarget.tagName} element\n`;
+  }
+
+  //div container holds the actual button
+  const container = document.querySelector("#container");
+  const button = document.querySelector("button");
+
+  //all of these fire upon clicking!
+
+  //clicking anywhere (body) will activate this body clicker
+  document.body.addEventListener("click", handleClick);
+  container.addEventListener("click", handleClick);
+  button.addEventListener("click", handleClick);
+</script>
