@@ -1,6 +1,6 @@
 # JavaScript & TypeScript Notes
 
-## Objects and Types
+## JS Objects and Types
 
 ### Primitive Types
 
