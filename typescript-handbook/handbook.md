@@ -698,3 +698,235 @@ names.forEach((s) => {
 - **Leverage contextual typing** in callbacks to avoid redundant annotations
 - **Be explicit about return types** for public APIs
 - **Use constraints on generics** to ensure type safety
+
+## Object Types
+
+### Property Modifiers
+
+#### Optional Properties
+```typescript
+interface PaintOptions {
+  shape: Shape;
+  xPos?: number;  // Optional property
+  yPos?: number;
+}
+
+function paintShape(opts: PaintOptions) {
+  // Handle undefined values
+  let xPos = opts.xPos === undefined ? 0 : opts.xPos;
+  let yPos = opts.yPos === undefined ? 0 : opts.yPos;
+}
+
+// Or use destructuring with defaults
+function paintShape({ shape, xPos = 0, yPos = 0 }: PaintOptions) {
+  console.log("x coordinate at", xPos);  // xPos is number
+  console.log("y coordinate at", yPos);  // yPos is number
+}
+```
+
+#### readonly Properties
+```typescript
+interface SomeType {
+  readonly prop: string;
+}
+
+function doSomething(obj: SomeType) {
+  console.log(`prop has the value '${obj.prop}'.`);
+  // obj.prop = "hello";  // Error: Cannot assign to readonly property
+}
+
+// readonly doesn't prevent mutation of nested objects
+interface Home {
+  readonly resident: { name: string; age: number };
+}
+
+function visitForBirthday(home: Home) {
+  home.resident.age++;  // ✅ Allowed - can mutate properties
+  // home.resident = { name: "New", age: 25 };  // ❌ Error - can't reassign
+}
+```
+
+### Excess Property Checks
+
+```typescript
+interface SquareConfig {
+  color?: string;
+  width?: number;
+}
+
+function createSquare(config: SquareConfig) { /* ... */ }
+
+// Error: Object literal excess property check
+// wrong spelling of colour vs color, extra property added
+// let mySquare = createSquare({ colour: "red", width: 100 });
+
+// Solutions:
+// 1. Type assertion
+let mySquare = createSquare({ width: 100, opacity: 0.5 } as SquareConfig);
+
+// 2. Index signature
+interface SquareConfig {
+  color?: string;
+  width?: number;
+  [propName: string]: unknown;  // Allow extra properties
+}
+
+// 3. Assign to variable first
+let squareOptions = { colour: "red", width: 100 };
+let mySquare = createSquare(squareOptions);
+```
+
+### Extending Types
+
+```typescript
+interface BasicAddress {
+  name?: string;
+  street: string;
+  city: string;
+  country: string;
+  postalCode: string;
+}
+
+// Single extension
+interface AddressWithUnit extends BasicAddress {
+  unit: string;
+}
+
+// Multiple extensions
+interface Colorful {
+  color: string;
+}
+
+interface Circle {
+  radius: number;
+}
+
+interface ColorfulCircle extends Colorful, Circle {}
+
+const cc: ColorfulCircle = {
+  color: "red",
+  radius: 42,
+};
+```
+
+### Intersection Types
+
+```typescript
+interface Colorful {
+  color: string;
+}
+
+interface Circle {
+  radius: number;
+}
+
+// Intersection type using &
+//has properties of both Colorful AND Circle
+type ColorfulCircle = Colorful & Circle;
+
+function draw(circle: Colorful & Circle) {
+  console.log(`Color was ${circle.color}`);
+  console.log(`Radius was ${circle.radius}`);
+}
+
+draw({ color: "blue", radius: 42 });  // ✅ OK
+```
+
+### Generic Object Types
+
+```typescript
+// Generic interface for Box
+interface Box<Type> {
+  contents: Type;
+}
+
+let box: Box<string> = { contents: "hello" };
+
+// Generic function with generic object
+function setContents<Type>(box: Box<Type>, newContents: Type) {
+  box.contents = newContents;
+}
+
+// Generic type aliases
+type OrNull<Type> = Type | null;
+type OneOrMany<Type> = Type | Type[];
+type OneOrManyOrNull<Type> = OrNull<OneOrMany<Type>>;
+
+type OneOrManyOrNullStrings = OneOrManyOrNull<string>;
+```
+
+### Array and ReadonlyArray Types
+
+```typescript
+// Array<T> is equivalent to T[]
+function doSomething(value: Array<string>) {
+  // Same as: value: string[]
+}
+
+// ReadonlyArray prevents mutations
+function doStuff(values: ReadonlyArray<string>) {
+  const copy = values.slice();           // ✅ Reading allowed
+  console.log(`First: ${values[0]}`);    // ✅ Reading allowed
+  // values.push("hello!");              // ❌ Error: No mutating methods
+}
+// Shorthand syntax
+function doStuff(values: readonly string[]) {
+  // Same as ReadonlyArray<string>
+}
+
+// Assignability
+let x: readonly string[] = [];
+let y: string[] = [];
+x = y;  // ✅ OK
+// y = x;  // ❌ Error: readonly array can't be assigned to mutable
+```
+
+### Tuple Types
+
+```typescript
+// Basic tuple
+// an array that has exactly a string at position 0, and a number at position 1
+type StringNumberPair = [string, number];
+
+function doSomething(pair: [string, number]) {
+  const a = pair[0];  // string
+  const b = pair[1];  // number
+  // const c = pair[2];  // Error: Index out of bounds
+}
+
+// Destructuring
+function doSomething(stringHash: [string, number]) {
+  const [inputString, hash] = stringHash;
+}
+
+// Optional elements (only at the end)
+type Either2dOr3d = [number, number, number?];
+
+function setCoordinate(coord: Either2dOr3d) {
+  const [x, y, z] = coord;  // z: number | undefined
+  console.log(`Dimensions: ${coord.length}`);  // length: 2 | 3
+}
+
+// Rest elements
+type StringNumberBooleans = [string, number, ...boolean[]];
+type StringBooleansNumber = [string, ...boolean[], number];
+
+// readonly tuples
+function doSomething(pair: readonly [string, number]) {
+  // pair[0] = "hello!";  // Error: Cannot assign to readonly
+}
+
+// const assertions create readonly tuples
+let point = [3, 4] as const;  // readonly [3, 4]
+```
+
+### Best Practices
+
+- **Use optional properties** with `?` for flexible interfaces
+- **Apply `readonly`** for immutable data contracts
+- **Prefer interface extension** over intersection for object composition
+- **Use generic objects** for reusable container types
+- **Choose `ReadonlyArray`** when functions shouldn't mutate arrays
+- **Use tuples** for fixed-length heterogeneous data
+- **Apply `as const`** for literal tuple inference
+- **Handle excess property checks** appropriately for your use case
