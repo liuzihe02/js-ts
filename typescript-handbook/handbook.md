@@ -369,6 +369,8 @@ function liveDangerously(x?: number | null) {
 
 ### Any Type
 
+avoid using this `any` type where possible!
+
 ```typescript
 let obj: any = { x: 0 };
 obj.foo();           // No type checking
@@ -571,3 +573,128 @@ function getArea(shape: Shape) {
   }
 }
 ```
+
+## Functions
+
+### Function Types
+
+```typescript
+// Function type expression
+function greeter(fn: (a: string) => void) {
+  fn("Hello, World");
+}
+```
+
+TypeScript call signatures define the parameter types and return types for function-like objects, enabling the creation of callable entities with additional properties.
+```ts
+// Call signature (when functions have properties)
+type DescribableFunction = {
+  description: string;
+  //note the : syntax here
+  (someArg: number): boolean;
+};
+
+function doSomething(fn: DescribableFunction) {
+  console.log(fn.description + " returned " + fn(6));
+}
+```
+
+### Generic Functions
+
+```typescript
+// Generic function
+function firstElement<Type>(arr: Type[]): Type | undefined {
+  return arr[0];
+}
+
+// Usage - type inferred automatically
+const s = firstElement(["a", "b", "c"]);  // string | undefined
+const n = firstElement([1, 2, 3]);        // number | undefined
+
+// Multiple type parameters
+function map<Input, Output>(
+  arr: Input[],
+  func: (arg: Input) => Output
+): Output[] {
+  return arr.map(func);
+}
+
+// Constraints
+function longest<Type extends { length: number }>(a: Type, b: Type) {
+  if (a.length >= b.length) {
+    return a;
+  } else {
+    return b;
+  }
+}
+```
+
+### Optional Parameters
+
+```typescript
+// Optional parameter with ?
+function f(x?: number) {
+  // x has type number | undefined
+}
+
+// Default parameters
+function f(x = 10) {
+  // x has type number (default removes undefined)
+}
+
+// Optional in callbacks
+function myForEach(arr: any[], callback: (arg: any, index?: number) => void) {
+  for (let i = 0; i < arr.length; i++) {
+    callback(arr[i], i);
+  }
+}
+```
+
+### Function Overloads
+
+```typescript
+// Overload signatures
+function makeDate(timestamp: number): Date;
+function makeDate(m: number, d: number, y: number): Date;
+
+// Implementation signature (not directly callable)
+function makeDate(mOrTimestamp: number, d?: number, y?: number): Date {
+  if (d !== undefined && y !== undefined) {
+    return new Date(y, mOrTimestamp, d);
+  } else {
+    return new Date(mOrTimestamp);
+  }
+}
+
+const d1 = makeDate(12345678);
+const d2 = makeDate(5, 5, 5);
+// const d3 = makeDate(1, 3); // Error: this function uses 2 arguments
+```
+### Return Type Annotations
+
+```typescript
+// Explicit return type
+function getFavoriteNumber(): number {
+  return 26;
+}
+
+// Promise return type
+async function getFavoriteNumber(): Promise<number> {
+  return 26;
+}
+
+// Contextual typing for anonymous functions
+const names = ["Alice", "Bob", "Eve"];
+names.forEach((s) => {
+  console.log(s.toUpperCase()); // s inferred as string
+});
+```
+
+### Best Practices
+
+- **Use generic functions** for reusable type-safe operations
+- **Prefer function overloads** over union parameters when possible
+- **Use rest parameters** instead of the `arguments` object
+- **Leverage contextual typing** in callbacks to avoid redundant annotations
+- **Be explicit about return types** for public APIs
+- **Use constraints on generics** to ensure type safety
