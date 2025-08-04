@@ -1067,3 +1067,318 @@ numberStorage.add(42);
 - **Provide sensible defaults** for optional generic parameters
 - **Keep generic functions focused** - avoid too many type parameters
 - **Combine generics with utility types** (`Partial<T>`, `Pick<T, K>`) for flexible APIs
+
+## Classes
+
+### Class Members
+
+#### Fields and Initialization
+
+```typescript
+class Point {
+  x: number;  // Explicit type
+  //this is an initializer, will run auto when instantiate
+  y = 0;      // Type inferred from initializer
+  
+  // Definite assignment assertion (when initialized elsewhere)
+  name!: string;
+}
+
+// readonly prevents reassignment after constructor
+class Greeter {
+  readonly name: string = "world";
+  
+  constructor(otherName?: string) {
+    if (otherName) this.name = otherName;  // OK in constructor
+  }
+  
+  // err() { this.name = "not ok"; }  // Error: readonly
+}
+```
+
+you can use the `strictPropertyInitialization` to decide if fields need to be initialized in the constructor
+
+#### Constructors
+
+```typescript
+class Point {
+  x: number;
+  y: number;
+ 
+  // Normal signature with defaults
+  constructor(x = 0, y = 0) {
+    this.x = x;
+    this.y = y;
+  }
+}
+
+class Point {
+  constructor(public x = 0, public y = 0) {
+    // Parameter properties create and initialize fields automatically
+  }
+}
+
+// Constructor overloads
+class Point {
+  constructor(x: number, y: number);
+  constructor(xy: string);
+  constructor(x: string | number, y: number = 0) {
+    // Implementation
+  }
+}
+```
+
+#### Methods and Accessors
+
+```typescript
+class Point {
+  x = 10;
+  y = 10;
+  
+  //mryhof
+  scale(n: number): void {
+    this.x *= n;
+    this.y *= n;
+  }
+  
+  //special getter setter methods
+  get length(): number {
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
+  }
+  
+  set length(value: number) {
+    const factor = value / this.length;
+    this.x *= factor;
+    this.y *= factor;
+  }
+}
+```
+
+### Class Heritage
+
+#### Implements Clauses
+
+```typescript
+interface Pingable {
+  ping(): void;
+}
+
+class Sonar implements Pingable {
+  ping() {
+    console.log("ping!");
+  }
+}
+
+// Multiple interfaces
+class Device implements Pingable, Serializable {
+  ping() { /* ... */ }
+  serialize() { /* ... */ }
+}
+```
+
+**Important:** `implements` only checks that the class satisfies the interface - it doesn't change the class type.
+
+#### Extends Clauses
+
+```typescript
+class Animal {
+  move() {
+    console.log("Moving along!");
+  }
+}
+
+class Dog extends Animal {
+  woof(times: number) {
+    for (let i = 0; i < times; i++) {
+      console.log("woof!");
+    }
+  }
+}
+
+// Method overriding
+class Cat extends Animal {
+  move(distance = 5) {  // Can add optional parameters
+    console.log(`Cat moves ${distance}m`);
+    //use suepr here
+    super.move();  // Call parent method
+  }
+}
+```
+
+use `super` to access parent methods
+
+### Member Visibility
+
+```typescript
+class Base {
+  public publicField = "visible everywhere";
+  protected protectedField = "visible in subclasses";
+  private privateField = "only visible in this class";
+  
+  protected doSomething() {
+    return this.privateField;
+  }
+}
+
+class Derived extends Base {
+  example() {
+    console.log(this.publicField);     // ✅ OK
+    console.log(this.protectedField);  // ✅ OK  
+    // console.log(this.privateField); // ❌ Error
+    
+    this.doSomething();  // ✅ OK - protected method
+  }
+}
+```
+
+> **Note:** TypeScript visibility is compile-time only. Use JavaScript private fields (`#field`) for runtime privacy.
+
+### Static Members
+
+static members are associated with the class, instead of a particular instance
+
+```typescript
+class MyClass {
+  static x = 0;
+  static printX() {
+    console.log(MyClass.x);
+  }
+  
+  private static secret = "hidden";
+}
+
+console.log(MyClass.x);      // ✅ Access static property
+MyClass.printX();            // ✅ Call static method
+
+// Static members are inherited
+class Derived extends MyClass {
+  static y = MyClass.x + 1;
+}
+```
+
+### Generic Classes
+
+```typescript
+class Box<T> {
+  private contents: T;
+  
+  constructor(value: T) {
+    this.contents = value;
+  }
+  
+  get(): T {
+    return this.contents;
+  }
+  
+  set(value: T): void {
+    this.contents = value;
+  }
+}
+
+const stringBox = new Box("hello");     // Box<string>
+const numberBox = new Box<number>(42);  // Explicit type
+
+// Generic constraints
+class Container<T extends { length: number }> {
+  constructor(private item: T) {}
+  
+  getLength(): number {
+    return this.item.length;
+  }
+}
+```
+
+**Important:** Static members cannot reference class type parameters.
+
+### Abstract Classes
+
+```typescript
+abstract class Shape {
+  abstract getArea(): number;  // Must be implemented by subclasses
+  
+  // Concrete method available to subclasses
+  printArea() {
+    console.log(`Area: ${this.getArea()}`);
+  }
+}
+
+class Circle extends Shape {
+  constructor(private radius: number) {
+    super();
+  }
+  
+  getArea(): number {
+    return Math.PI * this.radius ** 2;
+  }
+}
+
+// const shape = new Shape();  // Error: Cannot instantiate abstract class
+const circle = new Circle(5);   // ✅ OK
+```
+
+### `this` Types and Arrow Functions
+
+```typescript
+class MyClass {
+  name = "MyClass";
+  
+  // Arrow function preserves 'this' context
+  getName = () => {
+    return this.name;
+  };
+  
+  // Method returning 'this' for chaining
+  setName(name: string): this {
+    this.name = name;
+    return this;
+  }
+  
+  // this-based type guard
+  isValid(): this is ValidClass {
+    return this.name.length > 0;
+  }
+}
+
+class ValidClass extends MyClass {
+  validate() { /* ... */ }
+}
+
+const obj = new MyClass();
+const g = obj.getName;  // Safe to call - arrow function preserves context
+console.log(g());       // "MyClass"
+
+// Method chaining
+obj.setName("New").setName("Newer");
+```
+
+### Parameter Properties
+
+Shorthand syntax to create and initialize class properties:
+
+```typescript
+class Params {
+  constructor(
+    public readonly x: number,    // Creates public readonly x
+    protected y: number,          // Creates protected y  
+    private z: number,            // Creates private z
+    public name = "default"       // With default value
+  ) {
+    // No body necessary - properties auto-created
+  }
+}
+
+const p = new Params(1, 2, 3);
+console.log(p.x);  // 1
+console.log(p.name);  // "default"
+```
+
+### Best Practices
+
+- **Enable `strictPropertyInitialization`** to catch uninitialized properties
+- **Use parameter properties** for constructor-initialized fields
+- **Prefer composition over inheritance** when possible
+- **Use abstract classes** for shared behavior with required implementations
+- **Apply visibility modifiers** thoughtfully - default `public` is often sufficient
+- **Use arrow functions** for methods that need preserved `this` context
+- **Leverage `this` return types** for fluent interfaces
+- **Consider JavaScript private fields (`#`)** for true runtime privacy
