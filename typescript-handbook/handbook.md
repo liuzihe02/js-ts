@@ -930,3 +930,140 @@ let point = [3, 4] as const;  // readonly [3, 4]
 - **Use tuples** for fixed-length heterogeneous data
 - **Apply `as const`** for literal tuple inference
 - **Handle excess property checks** appropriately for your use case
+
+## Generics
+
+Generics allow creating reusable components that work with multiple types while maintaining type safety. They enable building flexible yet type-safe APIs.
+
+### Basic Generic Functions
+
+```typescript
+// Without generics - limited reusability
+function identity(arg: number): number {
+  return arg;
+}
+
+// With generics - works with any type
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+// Usage with explicit type
+let output = identity<string>("myString");  // string
+
+// Usage with type inference (preferred)
+let output = identity("myString");          // string (inferred)
+```
+
+### Generic Constraints
+
+Use `extends` to constrain generic types to specific capabilities:
+
+```typescript
+// Constraint interface
+interface Lengthwise {
+  length: number;
+}
+
+// Constrained generic function
+function loggingIdentity<Type extends Lengthwise>(arg: Type): Type {
+  console.log(arg.length);  // Now we know it has .length
+  return arg;
+}
+
+// Usage
+loggingIdentity("hello");           // ✅ string has length
+loggingIdentity([1, 2, 3]);         // ✅ array has length
+loggingIdentity({ length: 10 });    // ✅ object has length
+// loggingIdentity(3);              // ❌ number doesn't have length
+```
+
+### Generic Arrays and Multiple Type Parameters
+
+```typescript
+// Generic array function
+function loggingIdentity<Type>(arg: Type[]): Type[] {
+//this is fine as an array has length property
+  console.log(arg.length);
+  return arg;
+}
+
+// Alternative syntax
+function loggingIdentity<Type>(arg: Array<Type>): Array<Type> {
+  console.log(arg.length);
+  return arg;
+}
+
+// Multiple type parameters
+function map<Input, Output>(
+  arr: Input[],
+  func: (arg: Input) => Output
+): Output[] {
+  return arr.map(func);
+}
+
+// Usage
+const strings = map([1, 2, 3], (n) => n.toString());  // string[]
+```
+
+### Generic Interfaces and Types
+
+```typescript
+// Generic interface
+interface GenericIdentityFn<Type> {
+  (arg: Type): Type;
+}
+
+function identity<Type>(arg: Type): Type {
+  return arg;
+}
+
+let myIdentity: GenericIdentityFn<number> = identity;
+
+// Generic type aliases
+type Container<T> = {
+  value: T;
+  update: (newValue: T) => void;
+};
+
+type OrNull<Type> = Type | null;
+type OneOrMany<Type> = Type | Type[];
+```
+
+### Generic Classes
+
+```typescript
+class GenericStorage<Type> {
+  private items: Type[] = [];
+
+  add(item: Type): void {
+    this.items.push(item);
+  }
+
+  get(index: number): Type | undefined {
+    return this.items[index];
+  }
+
+  getAll(): Type[] {
+    return [...this.items];
+  }
+}
+
+// Usage
+const stringStorage = new GenericStorage<string>();
+stringStorage.add("hello");
+
+const numberStorage = new GenericStorage<number>();
+numberStorage.add(42);
+```
+
+### Best Practices
+
+- **Use type inference** when possible instead of explicit type parameters
+- **Apply meaningful constraints** with `extends` to ensure type safety
+- **Prefer generic interfaces** over generic type aliases for object shapes
+- **Use descriptive type parameter names** (`TData`, `TError`) for complex generics
+- **Leverage `keyof` constraints** for property access patterns
+- **Provide sensible defaults** for optional generic parameters
+- **Keep generic functions focused** - avoid too many type parameters
+- **Combine generics with utility types** (`Partial<T>`, `Pick<T, K>`) for flexible APIs
